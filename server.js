@@ -24,7 +24,7 @@ db.connect((error) => {
 const query = (sql, values = []) => new Promise((resolve, reject) => {
     db.query(sql, values, (error, rows) => error ? reject(error) : resolve(rows));
 });
-const sessions = new Map();
+
 const idIsValid = (value) => /^\d+$/.test(String(value)) && Number(value) > 0;
 const cleanText = (value, max = 120) => typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max;
 const sendDatabaseError = (res, error) => {
@@ -73,9 +73,8 @@ app.get('/api/insights', async (req, res) => {
     if (!city) return res.status(400).json({ error: 'Enter a city name.' });
     try {
         const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
-        const [geoResponse, fxResponse] = await Promise.all([
-            fetch(geoUrl), fetch('https://api.frankfurter.app/latest?from=EUR&to=MYR')
-        ]);
+        const geoResponse = await fetch(geoUrl);
+        const fxResponse = await fetch('https://api.frankfurter.app/latest?from=EUR&to=MYR');
         if (!geoResponse.ok || !fxResponse.ok) throw new Error('An external service is unavailable.');
         const geoData = await geoResponse.json();
         const fxData = await fxResponse.json();
@@ -157,17 +156,19 @@ async function completeSale(req, res) {
     const connection = db;
     try {
         await new Promise((resolve, reject) => connection.beginTransaction(error => error ? reject(error) : resolve()));
-        const buyers = await new Promise((resolve, reject) => connection.query('SELECT * FROM buyers WHERE id=? FOR UPDATE', [req.params.id], (error, rows) => error ? reject(error) : resolve(rows)));
+        const buyers = await query('SELECT * FROM buyers WHERE id=? FOR UPDATE', [req.params.id]);
+
         if (!buyers.length) throw Object.assign(new Error('Buyer not found.'), { status: 404 });
         const buyer = buyers[0];
         const unitName = req.body.unit || buyer.unit;
         if (!unitName) throw Object.assign(new Error('Assign a unit before completing a sale.'), { status: 400 });
-        const units = await new Promise((resolve, reject) => connection.query('SELECT * FROM units WHERE name=? FOR UPDATE', [unitName], (error, rows) => error ? reject(error) : resolve(rows)));
+        const units = await query('SELECT * FROM units WHERE name=? FOR UPDATE', [unitName]);
+
         if (!units.length) throw Object.assign(new Error('The selected unit no longer exists.'), { status: 400 });
         if (units[0].status === 'Sold' && buyer.status !== 'Sold') throw Object.assign(new Error('This unit has already been sold.'), { status: 409 });
-        await new Promise((resolve, reject) => connection.query('UPDATE units SET status=? WHERE id=?', ['Sold', units[0].id], error => error ? reject(error) : resolve()));
-        await new Promise((resolve, reject) => connection.query('UPDATE buyers SET name=?,agent=?,viewing_date=?,viewing_time=?,unit=?,status=? WHERE id=?', [req.body.name || buyer.name, req.body.agent || buyer.agent || 'Unassigned', req.body.viewing_date || buyer.viewing_date, req.body.viewing_time || buyer.viewing_time, unitName, 'Sold', req.params.id], error => error ? reject(error) : resolve()));
-        await new Promise((resolve, reject) => connection.query('UPDATE buyers SET status=? WHERE unit=? AND status=? AND id<>?', ['Cancelled', unitName, 'Pending', req.params.id], error => error ? reject(error) : resolve()));
+        await query('UPDATE units SET status=? WHERE id=?', ['Sold', units[0].id]);
+        await query('UPDATE buyers SET name=?,agent=?,viewing_date=?,viewing_time=?,unit=?,status=? WHERE id=?', [req.body.name || buyer.name, req.body.agent || buyer.agent || 'Unassigned', req.body.viewing_date || buyer.viewing_date, req.body.viewing_time || buyer.viewing_time, unitName, 'Sold', req.params.id]);
+        await query('UPDATE buyers SET status=? WHERE unit=? AND status=? AND id<>?', ['Cancelled', unitName, 'Pending', req.params.id]);
         await new Promise((resolve, reject) => connection.commit(error => error ? reject(error) : resolve()));
         const rows = await query('SELECT * FROM buyers WHERE id=?', [req.params.id]);
         res.json(rows[0]);
@@ -222,6 +223,8 @@ app.get('/api/stats', async (_req, res) => {
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
 
 
 

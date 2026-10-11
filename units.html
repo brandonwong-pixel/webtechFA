@@ -191,7 +191,7 @@
             if (image) {
                 html += `<tr class="unit-image-row" id="imageRow-${u.id}">
                     <td colspan="6">
-                        <img src="${image}" alt="${escapeHtml(u.name)}">
+                        <img src="${escapeHtml(image)}" alt="${escapeHtml(u.name)}">
                         <div class="preview-label">
                             <strong>${escapeHtml(u.name)}</strong> — ${escapeHtml(u.type)}<br>
                             📍 ${escapeHtml(u.location)} &nbsp;|&nbsp; 💰 $${Number(u.price).toLocaleString()} &nbsp;|&nbsp; <span class="badge badge-${u.status.toLowerCase()}">${escapeHtml(u.status)}</span>
@@ -299,6 +299,7 @@
 
 </body>
 </html>
+
 
 
 

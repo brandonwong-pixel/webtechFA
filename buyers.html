@@ -161,10 +161,10 @@
             if (status === 'Cancelled') statusClass = 'badge-cancelled';
             html += `<tr>
                 <td><strong>${escapeHtml(b.name)}</strong></td>
-                <td>${b.agent || 'Unassigned'}</td>
+                <td>${escapeHtml(b.agent || 'Unassigned')}</td>
                 <td>${b.viewing_date ? b.viewing_date.substring(0, 10) : '—'}</td>
-                <td>${b.viewing_time || '—'}</td>
-                <td>${b.unit || '—'}</td>
+                <td>${escapeHtml(b.viewing_time || '—')}</td>
+                <td>${escapeHtml(b.unit || '—')}</td>
                 <td><span class="badge ${statusClass}">${escapeHtml(status)}</span></td>
                 <td>
                     <span class="edit-btn" onclick="editBuyer(${b.id})">✏️ Edit</span>
@@ -179,7 +179,7 @@
         let options = '<option value="">Select unit</option>';
         for (let i = 0; i < units.length; i++) {
             if (units[i].status !== 'Sold') {
-                options += `<option value="${units[i].name}">${units[i].name} (${units[i].location})</option>`;
+                options += `<option value="${escapeHtml(units[i].name)}">${escapeHtml(units[i].name)} (${escapeHtml(units[i].location)})</option>`;
             }
         }
         document.getElementById('buyerUnit').innerHTML = options;
@@ -210,42 +210,13 @@
         const editId = parseInt(document.getElementById('editId').value);
 
         if (editId) {
-            await putData('/api/buyers/' + editId, { name, agent, viewing_date, viewing_time, unit, status });
-            
-            if (status === 'Sold') {
-                const unitObj = units.find(u => u.name === unit);
-                if (unitObj) {
-                    await putData('/api/units/' + unitObj.id, {
-                        name: unitObj.name,
-                        type: unitObj.type,
-                        location: unitObj.location,
-                        status: 'Sold',
-                        price: unitObj.price
-                    });
-                }
-                
-                const otherPendingBuyers = buyers.filter(b => 
-                    b.unit === unit && 
-                    b.status === 'Pending' && 
-                    b.id !== editId
-                );
-                
-                for (let i = 0; i < otherPendingBuyers.length; i++) {
-                    const ob = otherPendingBuyers[i];
-                    await putData('/api/buyers/' + ob.id, {
-                        name: ob.name,
-                        agent: ob.agent,
-                        viewing_date: ob.viewing_date,
-                        viewing_time: ob.viewing_time,
-                        unit: ob.unit,
-                        status: 'Cancelled'
-                    });
-                }
-            }
+            const result = await putData('/api/buyers/' + editId, { name, agent, viewing_date, viewing_time, unit, status });
+            if (result.error) return alert(result.error);
         } else {
-            await postData('/api/buyers', { name, agent, viewing_date, viewing_time, unit, status });
+            if (status === 'Sold') return alert('Add the buyer as Pending first, then edit the record to complete the sale.');
+            const result = await postData('/api/buyers', { name, agent, viewing_date, viewing_time, unit, status });
+            if (result.error) return alert(result.error);
         }
-
         cancelEdit();
         loadData();
     });
@@ -338,6 +309,7 @@
 
 </body>
 </html>
+
 
 
 
