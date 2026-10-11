@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Quest Housing Sales</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+
+        if (sessionStorage.getItem('quest_logged_in') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="header">
+    <div class="container">
+        <a href="index.html" class="logo">🏠 Quest Housing Sales</a>
+        <nav class="nav">
+            <a href="index.html" class="active">🏠 Home</a>
+            <a href="units.html">🏢 Units</a>
+            <a href="buyers.html">👥 Buyers</a>
+            <a href="announcements.html">📢 Announcements</a>
+            <a href="about.html">ℹ️ About</a>
+            <a href="login.html" onclick="logout()" class="logout">🚪 Logout</a>
+        </nav>
+    </div>
+</header>
+
+<main class="main" id="main">
+    <div class="container">
+        <section class="hero">
+            <div>
+                <span class="eyebrow">Quest property desk</span>
+                <h1>Good to see you, <span id="welcomeName">there</span>.</h1>
+                <p>Keep your listings, buyer viewings and sales updates moving from one clear workspace.</p>
+            </div>
+            <div class="hero-actions">
+                <a class="btn" href="units.html">＋ Add a property</a>
+                <a class="btn" href="buyers.html">＋ Add a buyer</a>
+            </div>
+        </section>
+
+        <div class="section-heading"><div><span class="eyebrow">At a glance</span><h2>Sales overview</h2><p>Your current housing portfolio</p></div></div>
+        <section class="stats">
+            <div class="stat-card">
+                <div class="label">Available</div>
+                <div class="number" id="availableCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Sold</div>
+                <div class="number" id="soldCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Buyers</div>
+                <div class="number" id="buyerCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Viewings</div>
+                <div class="number" id="viewingCount">0</div>
+            </div>
+        </section>
+
+        <div class="section-heading"><div><span class="eyebrow">Inventory</span><h2>Property units</h2><p>Latest listings and availability</p></div><a class="btn btn-success" href="units.html">Manage units</a></div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Unit</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody id="unitTable">
+                    <tr><td colspan="5" class="empty">Loading units...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section-heading"><div><span class="eyebrow">From the team</span><h2>Announcements</h2></div><a href="announcements.html">View all</a></div>
+        <section class="about-card">
+            <div class="section-heading"><div><span class="eyebrow">Connected services</span><h2>Local market snapshot</h2><p>Live place, weather and currency data for a selected city</p></div></div>
+            <div class="form-row" style="align-items:end;margin-bottom:14px"><div class="form-group" style="max-width:300px;margin:0"><label for="insightCity">City for the snapshot</label><input id="insightCity" value="Kuala Lumpur" placeholder="e.g. Kuala Lumpur"></div><button class="btn btn-success" id="loadInsights">Update snapshot</button></div>
+            <div class="api-grid" id="apiCards"><div class="api-status">Loading live data…</div></div>
+            <div class="api-status" id="apiStatus">Connecting to the property insight services.</div>
+        </section>
+        <div id="announceList">
+            <span class="empty">Loading announcements...</span>
+        </div>
+
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 <strong>Quest Housing Sales</strong> — New Housing Sales & Buyer Management System</p>
+    </div>
+</footer>
+
+<script>
+    function escapeHtml(value) {
+        const safeText = document.createElement('span');
+        safeText.textContent = value == null ? '' : String(value);
+        return safeText.innerHTML;
+    }
+    function logout() {
+        sessionStorage.removeItem('quest_logged_in');
+        sessionStorage.removeItem('quest_user');
+    }
+
+    async function loadStats() {
+        try {
+            const response = await fetch('/api/stats');
+            const stats = await response.json();
+            document.getElementById('availableCount').textContent = stats.available || 0;
+            document.getElementById('soldCount').textContent = stats.sold || 0;
+            document.getElementById('buyerCount').textContent = stats.buyers || 0;
+            document.getElementById('viewingCount').textContent = stats.viewings || 0;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    async function loadUnits() {
+        try {
+            const response = await fetch('/api/units');
+            const units = await response.json();
+            const table = document.getElementById('unitTable');
+
+            if (units.length === 0) {
+                table.innerHTML = '<tr><td colspan="5" class="empty">No units yet.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < units.length; i++) {
+                const u = units[i];
+                let statusClass = 'badge-available';
+                if (u.status === 'Sold') statusClass = 'badge-sold';
+                const image = u.image_data || '';
+                
+                html += `<tr>
+                    <td>
+                        <span class="unit-name" onclick="toggleImage(${u.id})">
+                            ${escapeHtml(u.name)}
+                        </span>
+                    </td>
+                    <td>${escapeHtml(u.type)}</td>
+                    <td>${escapeHtml(u.location)}</td>
+                    <td><span class="badge ${statusClass}">${escapeHtml(u.status)}</span></td>
+                    <td>$${Number(u.price).toLocaleString()}</td>
+                </tr>`;
+                
+                if (image) {
+                    html += `<tr class="unit-image-row" id="imageRow-${u.id}">
+                        <td colspan="5">
+                            <img src="${image}" alt="${escapeHtml(u.name)}">
+                            <div class="preview-label">
+                                <strong>${escapeHtml(u.name)}</strong> — ${escapeHtml(u.type)}<br>
+                                📍 ${escapeHtml(u.location)} &nbsp;|&nbsp; 💰 $${Number(u.price).toLocaleString()} &nbsp;|&nbsp; <span class="badge ${statusClass}">${escapeHtml(u.status)}</span>
+                            </div>
+                        </td>
+                    </tr>`;
+                }
+            }
+            table.innerHTML = html;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    function toggleImage(id) {
+        document.querySelectorAll('.unit-image-row.open').forEach(row => {
+            if (row.id !== 'imageRow-' + id) {
+                row.classList.remove('open');
+            }
+        });
+        
+        const row = document.getElementById('imageRow-' + id);
+        if (!row) return;
+        row.classList.toggle('open');
+    }
+
+    async function loadAnnouncements() {
+        try {
+            const response = await fetch('/api/announcements');
+            const announcements = await response.json();
+            const list = document.getElementById('announceList');
+
+            if (announcements.length === 0) {
+                list.innerHTML = '<span class="empty">No announcements yet.</span>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < announcements.length; i++) {
+                const a = announcements[i];
+                html += `<div class="announcement-item">
+                    <span>📢 ${escapeHtml(a.text)}</span>
+                </div>`;
+            }
+            list.innerHTML = html;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    const welcomeName = sessionStorage.getItem("quest_user");
+    if (welcomeName) document.getElementById("welcomeName").textContent = welcomeName;
+
+    async function loadInsights() {
+        const city = document.getElementById("insightCity").value.trim() || "Kuala Lumpur";
+        const status = document.getElementById("apiStatus");
+        const cards = document.getElementById("apiCards");
+        status.textContent = "Fetching data from the three connected services…";
+        try {
+            const response = await fetch("/api/insights?city=" + encodeURIComponent(city));
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Unable to load snapshot");
+            cards.innerHTML = `<div class="api-card"><span>Place search · OpenStreetMap</span><strong>${escapeHtml(data.place.name)}</strong><p>${escapeHtml(data.place.country)} · Coordinates ${data.place.latitude.toFixed(2)}, ${data.place.longitude.toFixed(2)}</p></div><div class="api-card"><span>Weather · Open-Meteo</span><strong>${data.weather.temperature}°C · ${escapeHtml(data.weather.description)}</strong><p>Current conditions for ${escapeHtml(data.place.name)}</p></div><div class="api-card"><span>Currency · Frankfurter</span><strong>€1 = RM ${data.currency.eurToMyr}</strong><p>Reference exchange rate · ${data.currency.date}</p></div>`;
+            status.textContent = "Live data loaded. Rates and weather are provided for general reference.";
+        } catch (error) { cards.innerHTML = `<div class="api-status">${error.message}</div>`; status.textContent = "Check the city name or try again later."; }
+    }
+    document.getElementById("loadInsights").addEventListener("click", loadInsights);
+    loadInsights();
+
+    loadStats();
+    loadUnits();
+    loadAnnouncements();
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+

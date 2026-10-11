@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyers - Quest Housing Sales</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+
+        if (sessionStorage.getItem('quest_logged_in') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="header">
+    <div class="container">
+        <a href="index.html" class="logo">🏠 Quest Housing Sales</a>
+        <nav class="nav">
+            <a href="index.html">🏠 Home</a>
+            <a href="units.html">🏢 Units</a>
+            <a href="buyers.html" class="active">👥 Buyers</a>
+            <a href="announcements.html">📢 Announcements</a>
+            <a href="about.html">ℹ️ About</a>
+            <a href="login.html" onclick="logout()" class="logout">🚪 Logout</a>
+        </nav>
+    </div>
+</header>
+
+<main class="main" id="main">
+    <div class="container">
+
+        <h2 class="page-title">👥 Buyer Management</h2>
+
+        <div class="form-card">
+            <h3 id="formTitle">➕ Add New Buyer</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Buyer Name</label>
+                    <input type="text" id="buyerName" placeholder="e.g. Sarah Chen">
+                </div>
+                <div class="form-group">
+                    <label>Assigned Agent</label>
+                    <select id="buyerAgent">
+                        <option value="">Select an agent</option>
+                        <option value="McLovin">McLovin</option>
+                        <option value="Bonnie Blue">Bonnie Blue</option>
+                        <option value="Allison Burgers">Allison Burgers</option>
+                        <option value="Liew Zi Yang">Liew Zi Yang</option>
+                        <option value="Spongebob">Spongebob</option>
+                        <option value="Will Smith">Will Smith</option>
+                        <option value="Chris Rock">Chris Rock</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Viewing Date</label>
+                    <input type="date" id="viewingDate">
+                </div>
+                <div class="form-group">
+                    <label>Viewing Time</label>
+                    <input type="time" id="viewingTime">
+                </div>
+                <div class="form-group">
+                    <label>Interested Unit</label>
+                    <select id="buyerUnit"><option value="">Select unit</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="buyerStatus">
+                        <option value="Pending">Pending</option>
+                        <option value="Sold">Sold</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:0 0 auto;">
+                    <button class="btn btn-success" id="submitBtn">➕ Add Buyer</button>
+                    <button class="btn btn-warning" id="cancelBtn" style="display:none;">✖ Cancel</button>
+                </div>
+            </div>
+            <input type="hidden" id="editId">
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Buyer</th>
+                        <th>Agent</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Unit</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="buyerTable">
+                    <tr><td colspan="7" class="empty">Loading buyers...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+
+        <section class="form-card" style="margin-top:28px">
+            <span class="eyebrow">New feature</span>
+            <h3>Buyer follow-ups</h3>
+            <p style="color:var(--muted);margin:-10px 0 18px">Keep a dated reminder attached to a buyer record.</p>
+            <form id="followupForm">
+                <div class="form-row">
+                    <div class="form-group"><label for="followBuyer">Buyer</label><select id="followBuyer" required><option value="">Choose a buyer</option></select></div>
+                    <div class="form-group"><label for="followDate">Due date</label><input type="date" id="followDate" required></div>
+                    <div class="form-group" style="flex:2"><label for="followNote">Reminder</label><input id="followNote" maxlength="500" placeholder="e.g. Call to confirm preferred viewing time" required></div>
+                    <input type="hidden" id="followupId">
+                    <button class="btn btn-success" id="followSubmit" type="submit">Add reminder</button>
+                    <button class="btn btn-warning" id="followCancel" type="button" style="display:none">Cancel</button>
+                </div>
+            </form>
+            <div id="followupList"><span class="empty">Loading reminders…</span></div>
+        </section>    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 <strong>Quest Housing Sales</strong></p>
+    </div>
+</footer>
+
+<script>
+    function escapeHtml(value) {
+        const safeText = document.createElement('span');
+        safeText.textContent = value == null ? '' : String(value);
+        return safeText.innerHTML;
+    }
+    function logout() {
+        sessionStorage.removeItem('quest_logged_in');
+        sessionStorage.removeItem('quest_user');
+    }
+
+    const getData = async (url) => (await fetch(url)).json();
+    const postData = async (url, data) => (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json();
+    const putData = async (url, data) => (await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json();
+    const deleteData = async (url) => (await fetch(url, { method: 'DELETE' })).json();
+
+    let units = [];
+    let buyers = [];
+
+    function showBuyers() {
+        const table = document.getElementById('buyerTable');
+        if (buyers.length === 0) {
+            table.innerHTML = '<tr><td colspan="7" class="empty">No buyers yet. Add your first buyer above.</td></tr>';
+            return;
+        }
+        let html = '';
+        for (let i = 0; i < buyers.length; i++) {
+            const b = buyers[i];
+            const status = b.status || 'Pending';
+            let statusClass = 'badge-available';
+            if (status === 'Sold') statusClass = 'badge-sold';
+            if (status === 'Cancelled') statusClass = 'badge-cancelled';
+            html += `<tr>
+                <td><strong>${escapeHtml(b.name)}</strong></td>
+                <td>${b.agent || 'Unassigned'}</td>
+                <td>${b.viewing_date ? b.viewing_date.substring(0, 10) : '—'}</td>
+                <td>${b.viewing_time || '—'}</td>
+                <td>${b.unit || '—'}</td>
+                <td><span class="badge ${statusClass}">${escapeHtml(status)}</span></td>
+                <td>
+                    <span class="edit-btn" onclick="editBuyer(${b.id})">✏️ Edit</span>
+                    <span class="delete-btn" onclick="deleteBuyerHandler(${b.id})">🗑️ Delete</span>
+                </td>
+            </tr>`;
+        }
+        table.innerHTML = html;
+    }
+
+    function updateUnitDropdown() {
+        let options = '<option value="">Select unit</option>';
+        for (let i = 0; i < units.length; i++) {
+            if (units[i].status !== 'Sold') {
+                options += `<option value="${units[i].name}">${units[i].name} (${units[i].location})</option>`;
+            }
+        }
+        document.getElementById('buyerUnit').innerHTML = options;
+    }
+
+    async function loadData() {
+        units = await getData('/api/units');
+        buyers = await getData('/api/buyers');
+        showBuyers();
+        updateUnitDropdown();
+        updateFollowupBuyers();
+    }
+
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+        const name = document.getElementById('buyerName').value.trim();
+        const agent = document.getElementById('buyerAgent').value;
+        const viewing_date = document.getElementById('viewingDate').value;
+        const viewing_time = document.getElementById('viewingTime').value;
+        const unit = document.getElementById('buyerUnit').value;
+        const status = document.getElementById('buyerStatus').value;
+
+        if (!name) return alert('Please enter a buyer name');
+        if (!agent) return alert('Please select an agent');
+        if (!viewing_date) return alert('Please select a viewing date');
+        if (!viewing_time) return alert('Please select a viewing time');
+        if (!unit) return alert('Please select a unit');
+
+        const editId = parseInt(document.getElementById('editId').value);
+
+        if (editId) {
+            await putData('/api/buyers/' + editId, { name, agent, viewing_date, viewing_time, unit, status });
+            
+            if (status === 'Sold') {
+                const unitObj = units.find(u => u.name === unit);
+                if (unitObj) {
+                    await putData('/api/units/' + unitObj.id, {
+                        name: unitObj.name,
+                        type: unitObj.type,
+                        location: unitObj.location,
+                        status: 'Sold',
+                        price: unitObj.price
+                    });
+                }
+                
+                const otherPendingBuyers = buyers.filter(b => 
+                    b.unit === unit && 
+                    b.status === 'Pending' && 
+                    b.id !== editId
+                );
+                
+                for (let i = 0; i < otherPendingBuyers.length; i++) {
+                    const ob = otherPendingBuyers[i];
+                    await putData('/api/buyers/' + ob.id, {
+                        name: ob.name,
+                        agent: ob.agent,
+                        viewing_date: ob.viewing_date,
+                        viewing_time: ob.viewing_time,
+                        unit: ob.unit,
+                        status: 'Cancelled'
+                    });
+                }
+            }
+        } else {
+            await postData('/api/buyers', { name, agent, viewing_date, viewing_time, unit, status });
+        }
+
+        cancelEdit();
+        loadData();
+    });
+
+    function editBuyer(id) {
+        const b = buyers.find(x => x.id === id);
+        if (!b) return;
+
+        document.getElementById('buyerName').value = b.name;
+        document.getElementById('buyerAgent').value = b.agent || '';
+        document.getElementById('viewingDate').value = b.viewing_date ? b.viewing_date.substring(0, 10) : '';
+        document.getElementById('viewingTime').value = b.viewing_time || '';
+        document.getElementById('buyerUnit').value = b.unit || '';
+        document.getElementById('buyerStatus').value = b.status || 'Pending';
+        document.getElementById('editId').value = id;
+        document.getElementById('formTitle').textContent = '✏️ Edit Buyer';
+        document.getElementById('submitBtn').textContent = '💾 Update Buyer';
+        document.getElementById('cancelBtn').style.display = 'inline-block';
+
+        document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('cancelBtn').addEventListener('click', cancelEdit);
+
+    function cancelEdit() {
+        document.getElementById('buyerName').value = '';
+        document.getElementById('buyerAgent').value = '';
+        document.getElementById('viewingDate').value = '';
+        document.getElementById('viewingTime').value = '';
+        document.getElementById('buyerUnit').value = '';
+        document.getElementById('buyerStatus').value = 'Pending';
+        document.getElementById('editId').value = '';
+        document.getElementById('formTitle').textContent = '➕ Add New Buyer';
+        document.getElementById('submitBtn').textContent = '➕ Add Buyer';
+        document.getElementById('cancelBtn').style.display = 'none';
+    }
+
+    async function deleteBuyerHandler(id) {
+        const b = buyers.find(x => x.id === id);
+        if (!confirm('Delete "' + b.name + '"?')) return;
+        await deleteData('/api/buyers/' + id);
+        loadData();
+    }
+
+    let followups = [];
+    function updateFollowupBuyers() {
+        const select = document.getElementById('followBuyer');
+        const selected = select.value;
+        select.innerHTML = '<option value="">Choose a buyer</option>' + buyers.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+        select.value = selected;
+    }
+    async function loadFollowups() {
+        const response = await fetch('/api/followups');
+        followups = await response.json();
+        const list = document.getElementById('followupList');
+        if (!followups.length) { list.innerHTML = '<span class="empty">No follow-up reminders yet.</span>'; return; }
+        list.innerHTML = followups.map(f => `<div class="announcement-item"><span><strong>${escapeHtml(f.buyer_name)}</strong> · ${escapeHtml(f.note)}<br><small>${String(f.due_date).substring(0,10)} · ${escapeHtml(f.status)}</small></span><div><button class="edit-btn" onclick="editFollowup(${f.id})">Edit</button><button class="edit-btn" onclick="finishFollowup(${f.id})">${f.status === 'Done' ? 'Reopen' : 'Mark done'}</button><button class="delete-btn" onclick="removeFollowup(${f.id})">Delete</button></div></div>`).join('');
+    }
+    function editFollowup(id) {
+        const item = followups.find(f => Number(f.id) === Number(id)); if (!item) return;
+        document.getElementById('followupId').value = id;
+        document.getElementById('followBuyer').value = item.buyer_id;
+        document.getElementById('followDate').value = String(item.due_date).substring(0,10);
+        document.getElementById('followNote').value = item.note;
+        document.getElementById('followSubmit').textContent = 'Save reminder';
+        document.getElementById('followCancel').style.display = 'inline-flex';
+    }
+    async function finishFollowup(id) {
+        const item = followups.find(f => Number(f.id) === Number(id)); if (!item) return;
+        await fetch('/api/followups/' + id, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({note:item.note,due_date:String(item.due_date).substring(0,10),status:item.status === 'Done' ? 'Open' : 'Done'}) });
+        loadFollowups();
+    }
+    async function removeFollowup(id) {
+        if (!confirm('Delete this reminder?')) return;
+        await fetch('/api/followups/' + id, { method:'DELETE' }); loadFollowups();
+    }
+    function clearFollowupForm() { document.getElementById('followupForm').reset(); document.getElementById('followupId').value=''; document.getElementById('followSubmit').textContent='Add reminder'; document.getElementById('followCancel').style.display='none'; }
+    document.getElementById('followupForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const id = document.getElementById('followupId').value;
+        const data = { buyer_id:document.getElementById('followBuyer').value, note:document.getElementById('followNote').value.trim(), due_date:document.getElementById('followDate').value };
+        const response = await fetch('/api/followups' + (id ? '/' + id : ''), { method:id ? 'PUT':'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(id ? {note:data.note,due_date:data.due_date,status:(followups.find(f => Number(f.id) === Number(id)) || {}).status || 'Open'} : data) });
+        const result = await response.json(); if (!response.ok) return alert(result.error || 'Could not save reminder.');
+        clearFollowupForm(); loadFollowups();
+    });
+    document.getElementById('followCancel').addEventListener('click', clearFollowupForm);
+    loadData();
+    loadFollowups();
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+

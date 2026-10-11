@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Quest Housing Sales</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="login-page">
+
+    <div class="login-box">
+        <h1>Create Account</h1>
+        <p class="subtitle">Sign up for Quest Housing Sales</p>
+
+        <div class="login-error" id="errorMsg"></div>
+        <div class="login-success" id="successMsg"></div>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Choose a username (min 3 chars)" required autocomplete="username" minlength="3">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="8-12 characters: upper, lower, number and symbol" required autocomplete="new-password" minlength="8">
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Re-enter the same password" required autocomplete="new-password" minlength="8">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Sign Up</button>
+        </form>
+
+        <div class="login-footer">
+            Already have an account? <a href="login.html">Sign In</a>
+            <br><br>
+            © 2026 Quest Housing Sales
+        </div>
+    </div>
+
+</div>
+
+<script>
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+
+        errorMsg.classList.remove('show');
+        successMsg.classList.remove('show');
+
+        if (username.length < 3) {
+            errorMsg.textContent = 'Username must be at least 3 characters';
+            errorMsg.classList.add('show');
+            return;
+        }
+
+        if (password.length < 8 || password.length > 12 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+            errorMsg.textContent = 'Use 8-12 characters with uppercase, lowercase, a number and a symbol.';
+            errorMsg.classList.add('show');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            errorMsg.textContent = 'Passwords do not match';
+            errorMsg.classList.add('show');
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('confirmPassword').focus();
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                errorMsg.textContent = data.error || 'Sign up failed';
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            successMsg.textContent = 'Account created! Redirecting to login...';
+            successMsg.classList.add('show');
+
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1500);
+
+        } catch (error) {
+            errorMsg.textContent = 'Server error. Please try again.';
+            errorMsg.classList.add('show');
+        }
+    });
+</script>
+
+</body>
+</html>
+
+
