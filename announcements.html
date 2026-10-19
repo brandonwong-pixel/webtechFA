@@ -18,14 +18,14 @@
 
 <header class="header">
     <div class="container">
-        <a href="index.html" class="logo">🏠 Quest Housing Sales</a>
+        <a href="index.html" class="logo"> Quest Housing Sales</a>
         <nav class="nav">
-            <a href="index.html">🏠 Home</a>
-            <a href="units.html">🏢 Units</a>
-            <a href="buyers.html">👥 Buyers</a>
-            <a href="announcements.html" class="active">📢 Announcements</a>
-            <a href="about.html">ℹ️ About</a>
-            <a href="login.html" onclick="logout()" class="logout">🚪 Logout</a>
+            <a href="index.html"> Home</a>
+            <a href="units.html"> Units</a>
+            <a href="buyers.html"> Buyers</a>
+            <a href="announcements.html" class="active"> Announcements</a>
+            <a href="about.html"> About</a>
+            <a href="login.html" onclick="logout()" class="logout"> Logout</a>
         </nav>
     </div>
 </header>
@@ -33,17 +33,17 @@
 <main class="main" id="main">
     <div class="container">
 
-        <h2 class="page-title">📢 Announcements</h2>
+        <h2 class="page-title"> Announcements</h2>
 
         <div class="form-card">
-            <h3>➕ Add New Announcement</h3>
+            <h3> Add New Announcement</h3>
             <div class="form-row">
                 <div class="form-group" style="flex:4;">
                     <input type="text" id="announceText" placeholder="e.g. New phase release - Riverbend">
                 </div>
                 <div class="form-group" style="flex:0 0 auto;">
-                    <button class="btn btn-success" id="addBtn">➕ Add</button>
-                    <button class="btn btn-warning" id="cancelBtn" style="display:none;">✖ Cancel</button>
+                    <button class="btn btn-success" id="addBtn"> Add</button>
+                    <button class="btn btn-warning" id="cancelBtn" style="display:none;"> Cancel</button>
                 </div>
             </div>
             <input type="hidden" id="editId">
@@ -58,7 +58,7 @@
 
 <footer class="footer">
     <div class="container">
-        <p>© 2026 <strong>Quest Housing Sales</strong></p>
+        <p> 2026 <strong>Quest Housing Sales</strong></p>
     </div>
 </footer>
 
@@ -90,10 +90,10 @@
         for (let i = 0; i < announcements.length; i++) {
             const a = announcements[i];
             html += `<div class="announcement-item">
-                <span>📢 ${escapeHtml(a.text)}</span>
+                <span> ${escapeHtml(a.text)}</span>
                 <div>
-                    <span class="edit-btn" onclick="editAnnouncement(${a.id})">✏️ Edit</span>
-                    <span class="delete-btn" onclick="deleteAnnouncement(${a.id})">🗑️ Delete</span>
+                    <span class="edit-btn" onclick="editAnnouncement(${a.id})"> Edit</span>
+                    <span class="delete-btn" onclick="deleteAnnouncement(${a.id})"> Delete</span>
                 </div>
             </div>`;
         }
@@ -124,14 +124,14 @@
         if (!a) return;
         document.getElementById('announceText').value = a.text;
         document.getElementById('editId').value = id;
-        document.getElementById('addBtn').textContent = '💾 Update';
+        document.getElementById('addBtn').textContent = ' Update';
         document.getElementById('cancelBtn').style.display = 'inline-block';
     }
 
     function cancelEdit() {
         document.getElementById('announceText').value = '';
         document.getElementById('editId').value = '';
-        document.getElementById('addBtn').textContent = '➕ Add';
+        document.getElementById('addBtn').textContent = ' Add';
         document.getElementById('cancelBtn').style.display = 'none';
     }
     document.getElementById('cancelBtn').addEventListener('click', cancelEdit);

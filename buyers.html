@@ -18,14 +18,14 @@
 
 <header class="header">
     <div class="container">
-        <a href="index.html" class="logo">🏠 Quest Housing Sales</a>
+        <a href="index.html" class="logo"> Quest Housing Sales</a>
         <nav class="nav">
-            <a href="index.html">🏠 Home</a>
-            <a href="units.html">🏢 Units</a>
-            <a href="buyers.html" class="active">👥 Buyers</a>
-            <a href="announcements.html">📢 Announcements</a>
-            <a href="about.html">ℹ️ About</a>
-            <a href="login.html" onclick="logout()" class="logout">🚪 Logout</a>
+            <a href="index.html"> Home</a>
+            <a href="units.html"> Units</a>
+            <a href="buyers.html" class="active"> Buyers</a>
+            <a href="announcements.html"> Announcements</a>
+            <a href="about.html"> About</a>
+            <a href="login.html" onclick="logout()" class="logout"> Logout</a>
         </nav>
     </div>
 </header>
@@ -33,10 +33,10 @@
 <main class="main" id="main">
     <div class="container">
 
-        <h2 class="page-title">👥 Buyer Management</h2>
+        <h2 class="page-title"> Buyer Management</h2>
 
         <div class="form-card">
-            <h3 id="formTitle">➕ Add New Buyer</h3>
+            <h3 id="formTitle"> Add New Buyer</h3>
             <div class="form-row">
                 <div class="form-group">
                     <label>Buyer Name</label>
@@ -76,8 +76,8 @@
                     </select>
                 </div>
                 <div class="form-group" style="flex:0 0 auto;">
-                    <button class="btn btn-success" id="submitBtn">➕ Add Buyer</button>
-                    <button class="btn btn-warning" id="cancelBtn" style="display:none;">✖ Cancel</button>
+                    <button class="btn btn-success" id="submitBtn"> Add Buyer</button>
+                    <button class="btn btn-warning" id="cancelBtn" style="display:none;"> Cancel</button>
                 </div>
             </div>
             <input type="hidden" id="editId">
@@ -123,7 +123,7 @@
 
 <footer class="footer">
     <div class="container">
-        <p>© 2026 <strong>Quest Housing Sales</strong></p>
+        <p> 2026 <strong>Quest Housing Sales</strong></p>
     </div>
 </footer>
 
@@ -167,8 +167,8 @@
                 <td>${escapeHtml(b.unit || '—')}</td>
                 <td><span class="badge ${statusClass}">${escapeHtml(status)}</span></td>
                 <td>
-                    <span class="edit-btn" onclick="editBuyer(${b.id})">✏️ Edit</span>
-                    <span class="delete-btn" onclick="deleteBuyerHandler(${b.id})">🗑️ Delete</span>
+                    <span class="edit-btn" onclick="editBuyer(${b.id})"> Edit</span>
+                    <span class="delete-btn" onclick="deleteBuyerHandler(${b.id})"> Delete</span>
                 </td>
             </tr>`;
         }
@@ -232,8 +232,8 @@
         document.getElementById('buyerUnit').value = b.unit || '';
         document.getElementById('buyerStatus').value = b.status || 'Pending';
         document.getElementById('editId').value = id;
-        document.getElementById('formTitle').textContent = '✏️ Edit Buyer';
-        document.getElementById('submitBtn').textContent = '💾 Update Buyer';
+        document.getElementById('formTitle').textContent = ' Edit Buyer';
+        document.getElementById('submitBtn').textContent = ' Update Buyer';
         document.getElementById('cancelBtn').style.display = 'inline-block';
 
         document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth' });
@@ -249,8 +249,8 @@
         document.getElementById('buyerUnit').value = '';
         document.getElementById('buyerStatus').value = 'Pending';
         document.getElementById('editId').value = '';
-        document.getElementById('formTitle').textContent = '➕ Add New Buyer';
-        document.getElementById('submitBtn').textContent = '➕ Add Buyer';
+        document.getElementById('formTitle').textContent = ' Add New Buyer';
+        document.getElementById('submitBtn').textContent = ' Add Buyer';
         document.getElementById('cancelBtn').style.display = 'none';
     }
 

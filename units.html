@@ -18,14 +18,14 @@
 
 <header class="header">
     <div class="container">
-        <a href="index.html" class="logo">🏠 Quest Housing Sales</a>
+        <a href="index.html" class="logo"> Quest Housing Sales</a>
         <nav class="nav">
-            <a href="index.html">🏠 Home</a>
-            <a href="units.html" class="active">🏢 Units</a>
-            <a href="buyers.html">👥 Buyers</a>
-            <a href="announcements.html">📢 Announcements</a>
-            <a href="about.html">ℹ️ About</a>
-            <a href="login.html" onclick="logout()" class="logout">🚪 Logout</a>
+            <a href="index.html"> Home</a>
+            <a href="units.html" class="active"> Units</a>
+            <a href="buyers.html"> Buyers</a>
+            <a href="announcements.html"> Announcements</a>
+            <a href="about.html"> About</a>
+            <a href="login.html" onclick="logout()" class="logout"> Logout</a>
         </nav>
     </div>
 </header>
@@ -33,10 +33,10 @@
 <main class="main" id="main">
     <div class="container">
 
-        <h2 class="page-title">🏢 Property Units</h2>
+        <h2 class="page-title"> Property Units</h2>
 
         <div class="form-card">
-            <h3>➕ Add New Unit</h3>
+            <h3> Add New Unit</h3>
             <form id="unitForm">
                 <div class="form-row">
                     <div class="form-group">
@@ -72,11 +72,11 @@
                     <div class="form-group">
                         <label>Property Image</label>
                         <input type="file" id="unitImage" accept="image/*">
-                        <button type="button" class="btn btn-warning" id="removeImageBtn" style="display:none; margin-top: 8px; padding: 6px 14px; font-size: 12px; min-height: auto;">✖ Remove Image</button>
+                        <button type="button" class="btn btn-warning" id="removeImageBtn" style="display:none; margin-top: 8px; padding: 6px 14px; font-size: 12px; min-height: auto;"> Remove Image</button>
                     </div>
                     <div class="form-group" style="flex:0 0 auto;">
-                        <button type="submit" class="btn btn-success" id="submitBtn">➕ Add</button>
-                        <button type="button" class="btn btn-warning" id="cancelBtn" style="display:none;">✖ Cancel</button>
+                        <button type="submit" class="btn btn-success" id="submitBtn"> Add</button>
+                        <button type="button" class="btn btn-warning" id="cancelBtn" style="display:none;"> Cancel</button>
                     </div>
                 </div>
                 <input type="hidden" id="editId">
@@ -101,7 +101,7 @@
 
 <footer class="footer">
     <div class="container">
-        <p>© 2026 <strong>Quest Housing Sales</strong></p>
+        <p> 2026 <strong>Quest Housing Sales</strong></p>
     </div>
 </footer>
 
@@ -116,10 +116,18 @@
         sessionStorage.removeItem('quest_user');
     }
 
-    const getData = async (url) => (await fetch(url)).json();
-    const postData = async (url, data) => (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json();
-    const putData = async (url, data) => (await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json();
-    const deleteData = async (url) => (await fetch(url, { method: 'DELETE' })).json();
+    async function readResponse(response) {
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || 'The request could not be completed.');
+        }
+        return result;
+    }
+
+    const getData = async (url) => readResponse(await fetch(url));
+    const postData = async (url, data) => readResponse(await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }));
+    const putData = async (url, data) => readResponse(await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }));
+    const deleteData = async (url) => readResponse(await fetch(url, { method: 'DELETE' }));
 
     let units = [];
 
@@ -183,8 +191,8 @@
                 <td><span class="badge badge-${u.status.toLowerCase()}">${escapeHtml(u.status)}</span></td>
                 <td>$${Number(u.price).toLocaleString()}</td>
                 <td>
-                    <span class="edit-btn" onclick="editUnit(${u.id})">✏️ Edit</span>
-                    <span class="delete-btn" onclick="deleteUnitHandler(${u.id})">🗑️ Delete</span>
+                    <span class="edit-btn" onclick="editUnit(${u.id})"> Edit</span>
+                    <span class="delete-btn" onclick="deleteUnitHandler(${u.id})"> Delete</span>
                 </td>
             </tr>`;
             
@@ -194,7 +202,7 @@
                         <img src="${escapeHtml(image)}" alt="${escapeHtml(u.name)}">
                         <div class="preview-label">
                             <strong>${escapeHtml(u.name)}</strong> — ${escapeHtml(u.type)}<br>
-                            📍 ${escapeHtml(u.location)} &nbsp;|&nbsp; 💰 $${Number(u.price).toLocaleString()} &nbsp;|&nbsp; <span class="badge badge-${u.status.toLowerCase()}">${escapeHtml(u.status)}</span>
+                             ${escapeHtml(u.location)} &nbsp;|&nbsp;  $${Number(u.price).toLocaleString()} &nbsp;|&nbsp; <span class="badge badge-${u.status.toLowerCase()}">${escapeHtml(u.status)}</span>
                         </div>
                     </td>
                 </tr>`;
@@ -235,15 +243,25 @@
         if (data.price <= 0) return alert('Please enter a valid price');
 
         const editId = parseInt(document.getElementById('editId').value);
-        if (editId) {
-            await putData('/api/units/' + editId, data);
-        } else {
-            await postData('/api/units', data);
+        try {
+            if (editId) {
+                await putData('/api/units/' + editId, data);
+            } else {
+                await postData('/api/units', data);
+            }
+        } catch (error) {
+            alert(error.message || 'Could not save the property. Please try again.');
+            return;
         }
+
         e.target.reset();
         document.getElementById('unitStatus').value = 'Available';
         cancelEdit();
-        loadUnits();
+        try {
+            await loadUnits();
+        } catch (error) {
+            alert('The property was saved, but the list could not refresh. Reload the page to see it.');
+        }
     });
 
     function editUnit(id) {
@@ -255,7 +273,7 @@
         document.getElementById('unitStatus').value = u.status;
         document.getElementById('unitPrice').value = u.price;
         document.getElementById('editId').value = id;
-        document.getElementById('submitBtn').textContent = '💾 Update';
+        document.getElementById('submitBtn').textContent = ' Update';
         document.getElementById('cancelBtn').style.display = 'inline-block';
 
         const imageData = u.image_data || '';
@@ -278,7 +296,7 @@
 
     function cancelEdit() {
         document.getElementById('editId').value = '';
-        document.getElementById('submitBtn').textContent = '➕ Add';
+        document.getElementById('submitBtn').textContent = ' Add';
         document.getElementById('cancelBtn').style.display = 'none';
         imageDataInput.value = '';
         imagePreview.innerHTML = '';

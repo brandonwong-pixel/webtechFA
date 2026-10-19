@@ -14,7 +14,7 @@ A housing sales and buyer management website built from the supplied starter pro
 ## Run the project locally
 
 1. Install Node.js, XAMPP and Git. Start MySQL from the XAMPP Control Panel.
-2. Open phpMyAdmin and import `schema.sql`. It creates the `housing_sales` database and all required tables. For an existing database, back up the data before applying the table changes.
+2. Open phpMyAdmin and import `schema.sql`. It creates the `housing_sales` database and all required tables. If you already have an older `units` table, run `migrate_units.sql` once to add the property image column.
 3. In this folder, copy `.env.example` to `.env`. Enter the local MySQL username and password. The `dotenv` package loads these settings when `server.js` starts. Do not commit `.env`.
 4. Open a terminal in this folder and run:
 

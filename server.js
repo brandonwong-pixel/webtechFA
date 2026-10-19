@@ -29,7 +29,15 @@ const idIsValid = (value) => /^\d+$/.test(String(value)) && Number(value) > 0;
 const cleanText = (value, max = 120) => typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max;
 const sendDatabaseError = (res, error) => {
     console.error('Database request failed:', error.code || error.message);
-    res.status(500).json({ error: 'The request could not be completed.' });
+    let message = 'The request could not be completed. Check the server terminal for the database error.';
+    if (['ECONNREFUSED', 'ETIMEDOUT', 'PROTOCOL_CONNECTION_LOST', 'PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR'].includes(error.code)) {
+        message = 'Cannot connect to MySQL. Start MySQL in XAMPP, then restart the website.';
+    } else if (error.code === 'ER_BAD_DB_ERROR' || error.code === 'ER_NO_SUCH_TABLE') {
+        message = 'The housing_sales database or its tables are missing. Import schema.sql using phpMyAdmin.';
+    } else if (error.code === 'ER_BAD_FIELD_ERROR') {
+        message = 'A required database column is missing. Run migrate_units.sql using phpMyAdmin.';
+    }
+    res.status(500).json({ error: message });
 };
 
 // --- Authentication: validate input and store bcrypt password hashes ---
